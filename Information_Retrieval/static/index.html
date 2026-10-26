@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IR Lab</title>
+<style>
+:root{--bg:#f4f6fa;--surface:#fff;--fg:#162033;--mut:#667085;--line:#e2e7f0;--acc:#2456c6;--acc-dark:#173f9e;--soft:#eef3ff;--mark:#ffe58a;--shadow:0 10px 28px rgba(25,45,85,.07)}
+@media (prefers-color-scheme:dark){:root{--bg:#111722;--surface:#182131;--fg:#edf2fb;--mut:#9eabc0;--line:#2b374a;--acc:#84aaff;--acc-dark:#aec5ff;--soft:#202e44;--mark:#6b5a12;--shadow:0 10px 28px rgba(0,0,0,.18)}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{padding:22px clamp(18px,4vw,52px) 0;border-bottom:1px solid var(--line);background:var(--surface)}
+h1{margin:0;font-size:23px;font-weight:700;letter-spacing:-.025em}
+header p{margin:2px 0 0;color:var(--mut);font-size:13px}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;padding:22px clamp(18px,4vw,52px);max-width:1540px;margin:0 auto}
+.wrap.sources-active{grid-template-columns:minmax(0,1fr)}
+.wrap>aside,.wrap>main,aside section,main section{min-width:0}
+@media(max-width:1100px){.wrap,.wrap.sources-active{grid-template-columns:minmax(0,1fr)}}
+h2{font-size:14px;margin:0 0 10px;font-weight:700;letter-spacing:.01em}
+section{margin-bottom:22px}
+button,input,select,textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 11px}
+button{cursor:pointer;background:var(--soft);transition:background .15s,border-color .15s,transform .15s}button:hover{border-color:var(--acc);transform:translateY(-1px)}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff}button.primary:hover{background:var(--acc-dark)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+textarea{width:100%;min-height:90px;resize:vertical}
+input[type=text],input[type=search]{width:100%}
+input[type=file]{width:100%;max-width:100%;min-width:0}
+input[type=number]{width:70px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+.mut{color:var(--mut);font-size:13px}
+.doc{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
+.doc button{padding:0 7px;line-height:1.4}
+.card{border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin:10px 0;background:var(--surface);box-shadow:var(--shadow)}
+.card .hd{display:flex;justify-content:space-between;gap:10px;font-weight:600}
+.sc{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--acc);white-space:nowrap}
+mark{background:var(--mark);color:inherit;padding:0 1px}
+.explain{background:var(--soft);border-left:3px solid var(--acc);padding:10px 14px;margin:10px 0}
+.explain p{margin:4px 0}.explain ul{margin:4px 0 4px 18px;padding:0}
+details{margin-top:6px;font-size:13px}pre{white-space:pre-wrap;font:13px/1.4 ui-monospace,Menlo,Consolas,monospace;margin:4px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.grid .col{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface)}.grid .col b{display:block;margin-bottom:4px}
+.grid li{font-size:13px;margin:3px 0}
+.evaluation-card{border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden;margin:12px 0}
+.evaluation-card .table-wrap{overflow-x:auto}
+.evaluation-table{width:100%;border-collapse:collapse;min-width:620px}
+.evaluation-table th,.evaluation-table td{padding:12px 16px;border-bottom:1px solid var(--line);text-align:right}
+.evaluation-table th{background:var(--soft);color:var(--mut);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.evaluation-table th:first-child,.evaluation-table td:first-child{text-align:left}
+.evaluation-table tbody tr:last-child td{border-bottom:0}
+.evaluation-table tbody tr:hover{background:var(--soft)}
+.evaluation-table td:not(:first-child){font-variant-numeric:tabular-nums}
+.model-name{font-weight:600}.metric-value{font-weight:600;color:var(--acc)}
+.evaluation-note{padding:12px 16px;color:var(--mut);font-size:13px;border-top:1px solid var(--line)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.err{color:#b3261e}.chip{font-size:12px;color:var(--mut)}
+label{font-size:13px}
+.tabs{display:flex;gap:14px;margin-top:14px;padding-bottom:10px}.tabs button.active{background:var(--acc);border-color:var(--acc);color:#fff}
+.browse-tools{display:grid;grid-template-columns:minmax(200px,1fr) 145px 150px 150px auto;gap:8px;align-items:center;margin:16px 0 8px}.browse-tools input{padding:11px 14px}.browse-tools select{min-width:0;width:100%}
+.browse-nav{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}.crumb{border:0;background:transparent;color:var(--acc);padding:3px 2px}
+.browse-grid{display:grid;grid-template-columns:minmax(280px,.95fr) minmax(350px,1.4fr);gap:16px;align-items:start}
+.browse-list,.preview{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--surface);box-shadow:var(--shadow)}
+.browse-list{max-height:calc(100vh - 260px);min-height:300px;overflow:auto}.preview{min-height:280px}
+.browse-item{display:block;width:100%;text-align:left;margin:7px 0;padding:11px 12px;background:var(--surface);border-radius:9px}
+.browse-item strong{display:block;font-size:14px}.browse-item .chip{display:block;margin-top:3px}.browse-item:hover{background:var(--soft)}
+.preview h3{font-size:17px;margin:16px 0 10px}.preview-text{max-height:min(65vh,560px);overflow-y:auto;overscroll-behavior:contain;white-space:pre-wrap;font:14px/1.6 Georgia,serif;margin:12px 0 24px;padding:0 6px 16px;border-bottom:1px solid var(--line)}
+.inline-cite{display:inline;color:var(--acc);text-decoration:underline;text-underline-offset:2px;font:inherit;cursor:pointer}.inline-cite:hover{color:var(--acc-dark)}
+.preview mark{background:var(--mark)}.related-list{padding-left:18px}.recent-list{display:flex;gap:5px;flex-wrap:wrap}
+.history-controls{display:flex;gap:6px}.browse-empty{padding:14px;color:var(--mut)}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:12px;margin-top:10px}.pager button{min-width:92px}.progress-track{height:6px;background:var(--soft);border-radius:20px;overflow:hidden}.progress-track span{display:block;height:100%;background:var(--acc);transition:width .25s}.status-card{background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin:10px 0}
+.server-notice{padding:10px 12px;border:1px solid #d8a431;background:#fff7df;color:#573d00;border-radius:5px;margin:10px 0}
+#sourcePane{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:18px;align-items:start}
+#sourcePane>section{border:1px solid var(--line);border-radius:12px;padding:20px;background:var(--surface);box-shadow:var(--shadow);margin:0}
+#sourcePane>section:first-child{grid-row:span 2}
+#sourcePane h2{font-size:18px;margin-bottom:6px}
+#sourcePane .source-intro{margin:0 0 16px}
+#sourcePane .source-actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+#sourcePane .file-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;border:1px dashed var(--line);border-radius:9px;background:var(--bg)}
+#sourcePane .file-row input[type=file]{flex:1;min-width:220px}
+#sourcePane .paste-title{width:100%;margin-top:12px}
+#sourcePane textarea{min-height:145px;margin-top:8px}
+#sourcePane #stats{font-size:16px;font-weight:600;margin-bottom:12px}
+#sourcePane #docs{max-height:360px;overflow:auto}
+#sourcePane #agentMeta{margin-top:12px}
+#sourcePane #agentMeta pre{background:var(--bg);border-radius:8px;padding:10px;overflow:auto}
+.agent-loading{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:9px;background:var(--soft);color:var(--fg)}
+.agent-spinner{width:17px;height:17px;border:2px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:agent-spin .8s linear infinite}
+@keyframes agent-spin{to{transform:rotate(360deg)}}
+@media(max-width:780px){#sourcePane{grid-template-columns:1fr}}
+@media(max-width:780px){.wrap{grid-template-columns:1fr}.browse-grid{grid-template-columns:1fr}.browse-list{max-height:none}.preview{position:static}.browse-tools{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>CA Copilot · Tax Law Browser</h1>
+  <p>The supplied Income Tax Ordinance opens as the starter collection. Add other sources or sample data to compare the retrieval models.</p>
+  <nav class="tabs" aria-label="Application workspace">
+    <button id="tabBrowse" class="active">Browse Laws</button>
+    <button id="tabSearch">Search &amp; Retrieval</button>
+    <button id="tabEvaluate">Model Evaluation</button>
+    <button id="tabSources">Data Sources</button>
+  </nav>
+</header>
+<div class="wrap">
+<aside id="sourcePane" hidden>
+  <section>
+    <h2>Source management</h2>
+    <p class="mut source-intro">Load, analyze, and manage the documents used by Browse Laws and Search &amp; Retrieval. Changes here update the shared collection.</p>
+    <div class="source-actions"><button id="reloadLaw" class="primary">Load Ordinance</button><button id="clear">Clear all</button></div>
+    <div class="file-row"><input type="file" id="files" multiple accept=".txt,.md,.pdf,.docx,.json"><button id="structureSources" class="primary" type="button">Structure &amp; add</button></div>
+    <div class="mut">.txt .md .pdf .docx .json. The supplied Ordinance PDF is organized into chapter, section, subsection, and paragraph nodes for browsing.</div>
+    <div class="status-card" id="sourceStatusCard" hidden><div class="row" style="justify-content:space-between"><strong id="pageProgress"></strong><button id="loadMorePages" hidden>Load next 50 pages</button></div><div class="progress-track"><span id="pageProgressBar" style="width:0%"></span></div></div>
+    <input class="paste-title" type="text" id="ptitle" placeholder="Title for pasted text (optional)">
+    <textarea id="ptext" placeholder="Or paste text here. Optional first lines: Title: / Law: / Section: / Source Type: / Tax Year: / Effective Date:"></textarea>
+    <div class="row"><button id="addtext">Add pasted text</button></div>
+    <div id="msg" class="mut"></div><div id="agentMeta"></div>
+  </section>
+  <section>
+    <h2>Index settings</h2>
+    <div class="row"><label><input type="checkbox" id="stem" checked> stemming</label><label><input type="checkbox" id="stop" checked> stop-words</label></div>
+    <div class="mut">Changing these rebuilds the index. Documents and queries always use the same analyzer.</div>
+  </section>
+  <section>
+    <h2>Collection</h2>
+    <div id="stats" class="mut">empty</div>
+    <div id="docs"></div>
+  </section>
+</aside>
+<main>
+  <div id="browsePane">
+    <section>
+      <div class="row"><button id="browseHome" class="primary">Home</button><div class="history-controls"><button id="browseBack" title="Previous location">← Back</button><button id="browseForward" title="Next location">Forward →</button></div><a href="http://127.0.0.1:8000/api/browse/source.pdf" target="_blank" rel="noopener">Open full Ordinance PDF</a></div>
+      <nav id="browseCrumbs" class="browse-nav" aria-label="Breadcrumb"></nav>
+      <div id="serverNotice" class="server-notice" hidden></div>
+      <div class="browse-tools"><input type="search" id="browseQuery" placeholder="Search while browsing, e.g. contractor withholding or section 153"><select id="browseKind" aria-label="Filter browse items by type"><option value="">All item types</option><option value="chapter">Chapters</option><option value="section">Sections</option><option value="subsection">Subsections</option><option value="paragraph">Paragraphs</option></select><select id="browseMetaField" aria-label="Choose metadata field"><option value="">All metadata</option></select><select id="browseMetaValue" aria-label="Choose metadata value" disabled><option value="">All values</option></select><button id="browseGo" class="primary">Search</button></div>
+      <div class="mut">Metadata filter options come from the fields supplied by loaded documents.</div>
+      <div id="browseNotice" class="mut"></div>
+      <div class="browse-grid"><section class="browse-list"><h2 id="browseListTitle">Laws</h2><div id="browseItems"></div></section><section class="preview" id="browsePreview"><h2>Document preview</h2><p class="mut">Choose a law, chapter, or section to explore its contents and related provisions.</p></section></div>
+      <div class="pager" id="browsePager" hidden><button id="pagePrev">← Previous</button><span id="pageLabel" class="mut"></span><button id="pageNext" class="primary">Next →</button></div>
+    </section>
+    <section><h2>Recently viewed</h2><div id="recentItems" class="recent-list mut">No recent provisions.</div></section>
+  </div>
+  <div id="searchPane" hidden>
+  <section>
+    <h2>3. Query</h2>
+    <input type="search" id="q" placeholder='e.g. withholding tax contractor payment   |   contractor AND NOT rent   |   "higher rate"   |   title:salary   |   153(1)(b)'>
+    <div class="row">
+      <label>Model <select id="model"><option value="fuzzy">Fuzzy model</option><option value="extended_boolean">Extended Boolean</option><option value="bm25">BM25</option><option value="tfidf">VSM (TF-IDF + cosine)</option><option value="bim">BIM</option><option value="boolean">Boolean</option></select></label>
+      <label>Search in <select id="scope"><option value="document">whole documents (fields)</option><option value="region">regions (sections / subsections)</option></select></label>
+      <label>Structure <select id="structure"><option value="plain">plain</option><option value="overlapped">overlapped lists</option><option value="non_overlapped">non-overlapped lists</option><option value="proximal">proximal nodes</option></select></label>
+      <label>Top <input type="number" id="k" value="8" min="1" max="50"></label>
+    </div>
+    <div class="row" id="fields"></div>
+    <div class="row" id="bm"><label>k1 <input type="number" id="k1" value="1.2" step="0.1" min="0"></label><label>b <input type="number" id="b" value="0.75" step="0.05" min="0" max="1"></label></div>
+    <div class="row" id="px"><label>hops <input type="number" id="hops" value="2" min="1" max="4"></label><label>decay <input type="number" id="decay" value="0.5" step="0.1" min="0.1" max="1"></label></div>
+    <div class="row"><button id="go" class="primary">Search</button><button id="cmp">Compare all models</button><button id="ev">Evaluate P / R / F1 / Accuracy</button><button id="fb" hidden>Re-rank with my "relevant" picks (BIM)</button></div>
+    <div class="mut" id="hint"></div>
+  </section>
+  <div id="out"></div>
+  </div>
+  <div id="evaluationPane" hidden>
+    <section>
+      <h2>Model Evaluation</h2>
+      <p class="mut">Compare Precision, Recall, F1 Measure, and Accuracy using the labeled evaluation corpus.</p>
+      <button id="evaluateNow" class="primary">Run evaluation</button>
+      <div id="evaluationOut"></div>
+    </section>
+  </div>
+</main>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const APP_BASE=location.protocol==="file:"?"http://127.0.0.1:8000":"";
+const appUrl=p=>APP_BASE+p;
+if(location.protocol==="file:"){
+  $("serverNotice").hidden=false;
+  $("serverNotice").innerHTML=`This page is opened directly from disk, so its API requests cannot reach the app. Start the server with <code>python3 app.py</code> from <code>Information_Retrieval</code>, then use <a href="http://127.0.0.1:8000/">http://127.0.0.1:8000</a>.`;
+}
+async function api(p,o={}){
+  if(location.protocol==="file:")throw new Error("This page is opened directly from disk. Start the app with `python3 app.py` inside Information_Retrieval, then open http://127.0.0.1:8000 in your browser.");
+  let r;try{r=await fetch(appUrl(p),o)}catch{throw new Error("Cannot reach the CA Copilot server. In Information_Retrieval run `python3 app.py`, then open http://127.0.0.1:8000.")}
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||r.statusText);return j
+}
+const post=(p,b)=>api(p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b||{})});
+const FIELDS={document:{title:2,meta:1.5,body:1},region:{heading:2,text:1}};
+const HINTS={fuzzy:"Fuzzy: partial and typo-tolerant term membership from 0 to 1. AND=min, OR=max, NOT=1-membership.",
+ extended_boolean:"Extended Boolean: explicit AND/OR/NOT set operations for precise include/exclude retrieval.",
+ boolean:"Boolean: bare words are ANDed. Use AND, OR, NOT, ( ), \"phrases\", field:word. Results are unranked.",
+ bim:"BIM: binary presence only, rare terms weigh more. Tick 'relevant' on results, then re-rank to see it learn.",
+ tfidf:"VSM: TF-IDF weights, ranked by cosine similarity.",bm25:"BM25: TF saturation + length normalisation + idf."};
+let weights={document:{...FIELDS.document},region:{...FIELDS.region}};
+
+function setErr(e){$("out").innerHTML='<p class="err">'+esc(e.message||e)+'</p>'}
+function renderState(s){
+  const st=s.stats;$("stats").textContent=st.documents?`${st.documents} documents, ${st.regions} regions, ${st.vocabulary} distinct terms`:"empty - add documents on the left";
+  $("docs").innerHTML=s.docs.map(d=>`<div class="doc"><span>${esc(d.title)}<br><span class="chip">${esc(d.id)} · ${d.regions} regions</span></span><button data-id="${esc(d.id)}" title="Remove">x</button></div>`).join("");
+  $("stem").checked=st.stem;$("stop").checked=st.stopwords;
+  $("msg").innerHTML=(s.errors||[]).map(e=>'<span class="err">'+esc(e)+'</span>').join("<br>");
+}
+function renderFields(){
+  const sc=$("scope").value;$("fields").innerHTML="Field weights: "+Object.keys(FIELDS[sc]).map(f=>`<label>${f} <input type="number" data-f="${f}" value="${weights[sc][f]}" step="0.5" min="0"></label>`).join("");
+  $("fields").querySelectorAll("input").forEach(i=>i.oninput=()=>weights[sc][i.dataset.f]=parseFloat(i.value)||0);
+}
+function sync(){
+  const reg=$("scope").value==="region",m=$("model").value;
+  $("structure").disabled=!reg;$("bm").style.display=m==="bm25"?"flex":"none";
+  $("px").style.display=reg&&$("structure").value==="proximal"?"flex":"none";
+  $("hint").textContent=HINTS[m];renderFields();
+}
+function params(extra){
+  const reg=$("scope").value==="region";
+  return {query:$("q").value,model:$("model").value,scope:$("scope").value,structure:reg?$("structure").value:"plain",
+   fields:weights[$("scope").value],k:+$("k").value||8,k1:+$("k1").value,b:+$("b").value,hops:+$("hops").value,decay:+$("decay").value,...extra};
+}
+function card(r,i,rel){
+  const bd=Object.entries(r.breakdown||{}).map(([t,c])=>`${t}: ${c}`).join("   ");
+  const via=(r.via||[]).map(v=>`<li>${esc(v.path)} (${esc(v.doc)}), ${v.hops} hop(s), +${v.contribution}</li>`).join("");
+  const meta=Object.entries(r.meta||{}).map(([k,v])=>`${esc(k)}: ${esc(v)}`).join(" | ");
+  return `<div class="card"><div class="hd"><span>${i+1}. ${esc(r.title)}${r.kind==="region"?'<br><span class="chip">'+esc(r.type)+' › '+esc(r.path)+'</span>':''}</span><span class="sc">${r.score}</span></div>
+  <div class="chip">${esc(meta)}</div><div>${r.snippet}</div>
+  <details><summary>why this score</summary><pre>matched: ${esc((r.matched||[]).join(", ")||"-")}\n${esc(bd)}${r.own_score!==undefined?"\nown score: "+r.own_score:""}${r.kind==="document"?"\nbest region: "+esc(r.where):""}</pre>${via?"<div class='mut'>boosted by connected nodes:</div><ul>"+via+"</ul>":""}</details>
+  ${rel?`<label><input type="checkbox" class="rel" value="${esc(r.id)}"> relevant</label>`:""}</div>`;
+}
+function explain(x){
+  return `<div class="explain"><p><b>What goes in.</b> ${esc(x.input)}</p><p><b>What happens inside.</b></p><ul>${x.inside.map(s=>"<li>"+esc(s)+"</li>").join("")}</ul>
+  <p><b>What comes out.</b> ${esc(x.output)}</p><p><b>Why this came first.</b> ${esc(x.why_first)}</p></div>`;
+}
+async function run(extra){
+  try{
+    const p=params(extra);if(!p.query.trim())return setErr("Type a query first.");
+    const r=await post("/api/search",p);
+    const lists=Object.entries(r.trace.lists||{}).map(([t,l])=>`<li><b>${esc(t)}</b>: ${l.map(esc).join("; ")||"-"}</li>`).join("");
+    $("out").innerHTML=`<h2>Results (${r.total} matching, ${r.took_ms} ms) - parsed as ${esc(r.trace.ast)}</h2>`+explain(r.explain)+
+      (lists?`<details open><summary>per-term region lists (non-overlapped)</summary><ul>${lists}</ul></details>`:"")+
+      (r.results.length?r.results.map((x,i)=>card(x,i,p.model!=="boolean"||true)).join(""):"<p>No results.</p>");
+    $("fb").hidden=!r.results.length;
+  }catch(e){setErr(e)}
+}
+$("go").onclick=()=>run();
+$("q").addEventListener("keydown",e=>{if(e.key==="Enter")run()});
+$("fb").onclick=()=>{const ids=[...document.querySelectorAll(".rel:checked")].map(c=>c.value);if(!ids.length)return setErr("Tick at least one result as relevant first.");$("model").value="bim";sync();run({model:"bim",relevant:ids})};
+$("cmp").onclick=async()=>{try{
+  const p=params();if(!p.query.trim())return setErr("Type a query first.");
+  const r=await post("/api/compare",p),names={fuzzy:"Fuzzy",extended_boolean:"Extended Boolean",boolean:"Boolean (unranked)",bim:"BIM",tfidf:"VSM (TF-IDF + cosine)",bm25:"BM25"};
+  $("out").innerHTML="<h2>Same query, four models</h2><div class='grid'>"+Object.entries(r.models).map(([m,v])=>`<div class="col"><b>${names[m]} - ${v.total} matches</b><ol>${v.results.map(x=>`<li>${esc(x.kind==="region"?x.title+" › "+x.path:x.title)} <span class="sc">${x.score}</span></li>`).join("")||"<li>none</li>"}</ol></div>`).join("")+
+   "</div><div class='explain'><p><b>Agreement</b></p><ul>"+r.agreement.map(a=>`<li>${a.a} vs ${a.b}: ${a.overlap} shared results in the top list; same #1: ${a.same_top?"yes":"no"}</li>`).join("")+"</ul></div>";
+}catch(e){setErr(e)}};
+$("ev").onclick=()=>{switchView("evaluate");evaluateModels()};
+$("evaluateNow").onclick=evaluateModels;
+async function evaluateModels(){try{
+  const r=await api("/api/evaluate"), labels={fuzzy:"Fuzzy",extended_boolean:"Extended Boolean",boolean:"Boolean",bim:"BIM",tfidf:"VSM (TF-IDF)",bm25:"BM25"};
+  const rows=Object.entries(r.detail.table).map(([model,metrics])=>`<tr><td class="model-name">${labels[model]||esc(model)}</td><td class="metric-value">${metrics.P==null?"—":metrics.P.toFixed(2)}</td><td class="metric-value">${metrics.R==null?"—":metrics.R.toFixed(2)}</td><td class="metric-value">${metrics.F1==null?"—":metrics.F1.toFixed(2)}</td><td class="metric-value">${metrics.Accuracy==null?"—":metrics.Accuracy.toFixed(2)}</td></tr>`).join("");
+  $("evaluationOut").innerHTML=`<div class="evaluation-card"><div class="table-wrap"><table class="evaluation-table"><caption class="sr-only">Precision, Recall, F1 Measure, and Accuracy by retrieval model</caption><thead><tr><th>Model</th><th>Precision</th><th>Recall</th><th>F1 Measure</th><th>Accuracy</th></tr></thead><tbody>${rows}</tbody></table></div><div class="evaluation-note">Results are averaged over the seven labeled sample queries. Boolean models use their complete returned set; ranked models are evaluated at k = ${r.detail.k}.</div></div><p class="mut">Evaluation uses an isolated labeled sample corpus and does not change your Ordinance collection.</p>`;
+}catch(e){$("evaluationOut").innerHTML='<p class="err">'+esc(e.message)+'</p>'}};
+async function refresh(p,o){try{renderState(await (o?api(p,o):api(p)))}catch(e){$("msg").innerHTML='<span class="err">'+esc(e.message)+'</span>'}}
+$("reloadLaw").onclick=async()=>{try{const result=await api("/api/browse/load-ordinance",{method:"POST"});if(result.stats)renderState(result);switchView("sources")}catch(e){$("msg").innerHTML='<span class="err">'+esc(e.message)+'</span>'}};
+$("clear").onclick=()=>refresh("/api/clear",{method:"POST"});
+$("docs").onclick=e=>{const b=e.target.closest("button");if(b)refresh("/api/docs/"+encodeURIComponent(b.dataset.id),{method:"DELETE"})};
+$("files").onchange=()=>{$("agentMeta").innerHTML=""};
+$("structureSources").onclick=async()=>{
+  const files=[...$("files").files];
+  if(!files.length)return $("msg").innerHTML='<span class="err">Choose one or more source files first.</span>';
+  const button=$("structureSources");button.disabled=true;button.textContent="Agent is structuring…";
+  $("agentMeta").innerHTML='<div class="agent-loading" role="status" aria-live="polite"><span class="agent-spinner" aria-hidden="true"></span><span>Agent is organizing chapters, sections, subsections, and paragraphs…</span></div>';
+  try{
+    const results=[];
+    for(const file of files){const fd=new FormData();fd.append("file",file);results.push(await api("/api/agent/ingest",{method:"POST",body:fd}))}
+    $("agentMeta").innerHTML=results.map(r=>`<div class="status-card"><strong>${esc(r.filename)}</strong><div class="mut">${esc(r.method)} · added ${r.ids.length} document(s) to the collection.</div></div>`).join("");
+    renderState(results[results.length-1]);
+  }catch(e){$("agentMeta").innerHTML='<span class="err">'+esc(e.message)+'</span>'}
+  finally{button.disabled=false;button.textContent="Structure & add"}
+};
+$("addtext").onclick=async()=>{try{renderState(await post("/api/text",{title:$("ptitle").value,text:$("ptext").value}));$("ptext").value="";$("ptitle").value=""}catch(e){$("msg").innerHTML='<span class="err">'+esc(e.message)+'</span>'}};
+const cfg=()=>refresh("/api/config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({stem:$("stem").checked,stopwords:$("stop").checked})});
+$("stem").onchange=cfg;$("stop").onchange=cfg;
+["model","scope","structure"].forEach(i=>$(i).onchange=sync);
+sync();if(location.protocol!=="file:")refresh("/api/state");
+
+// Week 5 browsing/navigation experience.
+let browseParent=null, browseHistory=[], browseHistoryIndex=-1, restoringBrowse=false, browseOffset=0, lastCollectionLoaded=0;
+let browseMetadataFields={};
+async function refreshBrowseMetadata(){
+  try{
+    const previous=$("browseMetaField").value, previousValue=$("browseMetaValue").value;
+    const data=await api("/api/browse/filters");browseMetadataFields=data.fields||{};
+    const keys=Object.keys(browseMetadataFields);
+    $("browseMetaField").innerHTML='<option value="">All metadata</option>'+keys.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
+    $("browseMetaField").value=keys.includes(previous)?previous:"";
+    updateBrowseMetadataValues();
+    if((browseMetadataFields[$("browseMetaField").value]||[]).includes(previousValue))$("browseMetaValue").value=previousValue;
+  }catch{}
+}
+function updateBrowseMetadataValues(){
+  const key=$("browseMetaField").value, values=browseMetadataFields[key]||[];
+  $("browseMetaValue").innerHTML='<option value="">All values</option>'+values.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+  $("browseMetaValue").disabled=!key||!values.length;
+}
+function crumbHtml(items){
+  return items.map((x,i)=>`${i?'<span class="mut">›</span>':''}<button class="crumb" data-crumb="${esc(x.id)}">${esc(x.title)}</button>`).join("");
+}
+function browseItemHtml(x){
+  return `<button class="browse-item" data-browse-id="${esc(x.id)}" data-browse-type="${esc(x.type)}" data-doc-id="${esc(x.doc_id)}"><strong>${esc(x.title||x.citation||"Untitled")}</strong><span class="chip">${esc(x.type)}${x.citation?" · "+esc(x.citation):""}${x.page_start?" · PDF page "+esc(x.page_start):""}${x.children?" · "+esc(x.children)+" items":""}</span>${x.snippet?`<span>${x.snippet}</span>`:""}</button>`;
+}
+function renderRecent(){
+  let items=[];try{items=JSON.parse(localStorage.getItem("caCopilotRecent")||"[]")}catch{}
+  $("recentItems").innerHTML=items.length?items.map(x=>`<button class="browse-item" data-recent-id="${esc(x.id)}" data-recent-title="${esc(x.title)}">${esc(x.title)}</button>`).join(""):"No recent provisions.";
+}
+function saveRecent(x){
+  if(!x||!x.id||x.type==="document")return;
+  let items=[];try{items=JSON.parse(localStorage.getItem("caCopilotRecent")||"[]")}catch{}
+  items=[{id:x.id,title:x.title,type:x.type},...items.filter(y=>y.id!==x.id)].slice(0,8);
+  localStorage.setItem("caCopilotRecent",JSON.stringify(items));renderRecent();
+}
+function setHistory(id){
+  if(restoringBrowse)return;
+  browseHistory=browseHistory.slice(0,browseHistoryIndex+1);
+  browseHistory.push(id);browseHistoryIndex=browseHistory.length-1;
+  $("browseBack").disabled=browseHistoryIndex<=0;$("browseForward").disabled=browseHistoryIndex>=browseHistory.length-1;
+}
+function switchView(view){
+  const views={browse:"browsePane",search:"searchPane",evaluate:"evaluationPane",sources:"sourcePane"};
+  Object.entries(views).forEach(([name,id])=>$(id).hidden=name!==view);
+  document.querySelector("main").hidden=view==="sources";
+  document.querySelector(".wrap").classList.toggle("sources-active",view==="sources");
+  ["Browse","Search","Evaluate","Sources"].forEach(name=>{
+    const button=$("tab"+name);
+    if(button)button.classList.toggle("active",name.toLowerCase()===view);
+  });
+  if(view==="browse")loadBrowse();
+  if(view==="sources")refresh("/api/state");
+}
+function switchTab(browse){
+  switchView(browse?"browse":"search");
+}
+async function loadBrowse(parentId=null,query="",kind="",record=true,offset=0){
+  try{
+    await refreshBrowseMetadata();
+    const status=await api("/api/browse/status");
+    $("sourceStatusCard").hidden=!status.total_pages;
+    $("pageProgress").textContent=status.total_pages?`Ordinance indexed · ${status.loaded_pages} of ${status.total_pages} pages${status.status==="loading"?" · loading…":status.status==="error"?" · paused":""}`:"";
+    $("pageProgressBar").style.width=status.total_pages?`${Math.min(100,100*status.loaded_pages/status.total_pages)}%`:"0%";
+    const canContinue=status.loaded_pages<status.total_pages&&(status.status==="partial"||status.status==="loading"||status.status==="error");
+    $("loadMorePages").hidden=!canContinue;
+    $("loadMorePages").disabled=status.status==="loading";
+    $("loadMorePages").textContent=status.status==="loading"?"Loading next pages…":status.status==="error"?"Retry loading pages":`Load next ${status.chunk_pages||100} pages`;
+    if(status.status==="loading"&&!status.documents){
+      $("browseNotice").textContent="Preparing the first page chunk…";
+      $("browseItems").innerHTML='<div class="browse-empty">Reading the first pages of the supplied law source.</div>';
+      window.setTimeout(()=>loadBrowse(parentId,query,kind,record,offset),1200);return;
+    }
+    if(status.status==="error"&&!status.documents)throw new Error(status.error||"The Ordinance could not be loaded.");
+    const p=new URLSearchParams({offset:String(offset),limit:"50"});if(parentId)p.set("parent_id",parentId);if(query)p.set("q",query);if(kind)p.set("kind",kind);if($("browseMetaField").value)p.set("meta_field",$("browseMetaField").value);if($("browseMetaValue").value)p.set("meta_value",$("browseMetaValue").value);
+    const data=await api("/api/browse?"+p.toString());
+    browseOffset=offset;
+    browseParent=parentId;$("browseCrumbs").innerHTML=crumbHtml(data.breadcrumb||[]);
+    $("browseListTitle").textContent=data.mode==="search"?`Search results · ${data.total}`:parentId?"Contents":"Available laws";
+    const progress=status.status==="partial"||status.status==="loading"?`Search covers the ${status.loaded_pages} pages loaded so far. `:"";
+    $("browseNotice").textContent=progress+(data.mode==="search"?`Matches for “${query}” in the structured law collection.`:"Select a chapter or section to browse its contents.");
+    $("browseItems").innerHTML=data.items.length?data.items.map(browseItemHtml).join(""):'<div class="browse-empty">No matching items. Try another query or filter.</div>';
+    $("browsePager").hidden=data.total<=(data.limit||50);
+    $("pageLabel").textContent=`${data.total?offset+1:0}–${Math.min(offset+data.items.length,data.total)} of ${data.total}`;
+    $("pagePrev").disabled=offset===0;$("pageNext").disabled=offset+(data.limit||50)>=data.total;
+    if(status.status==="error")$("browseNotice").textContent=`${status.error||"The next chunk failed."} ${progress}`;
+    if(status.status==="loading"&&status.documents)window.setTimeout(()=>loadBrowse(browseParent,query,kind,false,offset),1200);
+    if(status.documents&&status.loaded_pages!==lastCollectionLoaded){lastCollectionLoaded=status.loaded_pages;refresh("/api/state")}
+    if(record)setHistory(query?`search:${query}`:(parentId||"home"));
+  }catch(e){$("browseItems").innerHTML=`<p class="err">${esc(e.message)}</p>`;$("browseNotice").textContent=""}
+}
+function citationText(text){
+  const re=/\b(sections?\s+\d+[A-Za-z]{0,3})\b/gi;let out="",last=0,m;
+  while((m=re.exec(text||""))){out+=esc(text.slice(last,m.index))+`<a class="inline-cite" href="#" data-citation="${esc(m[0].replace(/^sections?\s+/i,""))}">${esc(m[0])}</a>`;last=re.lastIndex}
+  return out+esc((text||"").slice(last));
+}
+async function openBrowseCitation(citation){
+  try{
+    const hit=await api("/api/browse/section/"+encodeURIComponent(citation));
+    await openBrowseNode(hit.id);
+  }catch(e){$("browseNotice").textContent=e.message}
+}
+async function openBrowseNode(id,record=true,offset=0){
+  try{
+    const params=new URLSearchParams({offset:String(offset),limit:"50"});if($("browseMetaField").value)params.set("meta_field",$("browseMetaField").value);if($("browseMetaValue").value)params.set("meta_value",$("browseMetaValue").value);
+    const data=await api("/api/browse/node/"+encodeURIComponent(id)+"?"+params.toString()),n=data.node;
+    browseParent=n.id;browseOffset=offset;$("browseQuery").value="";$("browseKind").value="";$("browseCrumbs").innerHTML=crumbHtml(data.breadcrumb||[]);
+    $("browseListTitle").textContent=data.children.length?"Contents":"Nearby sections";
+    const childItems=data.children.length?data.children:data.related;
+    $("browseItems").innerHTML=childItems.length?childItems.map(browseItemHtml).join():'<div class="browse-empty">No child or related provisions were found.</div>';
+    $("browsePager").hidden=data.children_total<=50;
+    $("pageLabel").textContent=`${offset+1}–${Math.min(offset+data.children.length,data.children_total)} of ${data.children_total}`;
+    $("pagePrev").disabled=offset===0;$("pageNext").disabled=offset+50>=data.children_total;
+    const text=data.text||"No extracted text is available for this heading.";
+    $("browsePreview").innerHTML=`<div class="row"><span class="chip">${esc(n.type)}${n.citation?" · "+esc(n.citation):""}${n.page_start?" · PDF page "+esc(n.page_start)+(n.page_end&&n.page_end!==n.page_start?"–"+esc(n.page_end):""):""}</span><a href="${appUrl("/api/browse/source.pdf#page="+esc(n.page_start||1))}" target="_blank" rel="noopener">Open source page</a></div><h3>${esc(n.title)}</h3><div class="preview-text">${citationText(text)}</div>${data.related.length?`<h3>Related provisions</h3><div>${data.related.map(x=>`<button class="browse-item" data-browse-id="${esc(x.id)}" data-browse-type="${esc(x.type)}" data-doc-id="${esc(x.doc_id)}">${esc(x.title)} <span class="chip">${esc(x.citation)}</span></button>`).join("")}</div>`:""}`;
+    saveRecent(n);if(record)setHistory(n.id);
+  }catch(e){$("browsePreview").innerHTML=`<p class="err">${esc(e.message)}</p>`}
+}
+async function openBrowseDocument(id,record=true){
+  try{
+    const data=await api("/api/browse/document/"+encodeURIComponent(id));
+    $("browseCrumbs").innerHTML=crumbHtml(data.breadcrumb||[]);browseParent=data.node?.id||null;
+    $("browseListTitle").textContent="Chapters";
+    $("browseItems").innerHTML=data.children.length?data.children.map(browseItemHtml).join():'<div class="browse-empty">No chapters were extracted.</div>';
+    const m=Object.entries(data.document.meta||{}).map(([k,v])=>`${k}: ${v}`).join(" · ");
+    $("browsePreview").innerHTML=`<h3>${esc(data.document.title)}</h3><p class="chip">${esc(m)}</p><p>This law is organized below by chapter, section, subsection, and paragraph. Select a chapter to continue browsing.</p><a href="${appUrl("/api/browse/source.pdf")}" target="_blank" rel="noopener">Open full Ordinance PDF (${esc(data.node?.page_end||"839")} pages)</a>`;
+    if(record)setHistory(data.node?.id||id);
+  }catch(e){$("browsePreview").innerHTML=`<p class="err">${esc(e.message)}</p>`}
+}
+$("browseItems").onclick=e=>{const b=e.target.closest("[data-browse-id]");if(b){if(b.dataset.browseType==="document")openBrowseDocument(b.dataset.docId);else openBrowseNode(b.dataset.browseId)}};
+$("browsePreview").onclick=e=>{
+  const c=e.target.closest("[data-citation]");if(c){e.preventDefault();openBrowseCitation(c.dataset.citation);return}
+  const b=e.target.closest("[data-browse-id]");if(b)openBrowseNode(b.dataset.browseId);
+};
+$("browseCrumbs").onclick=e=>{const b=e.target.closest("[data-crumb]");if(b)openBrowseNode(b.dataset.crumb)};
+$("recentItems").onclick=e=>{const b=e.target.closest("[data-recent-id]");if(b)openBrowseNode(b.dataset.recentId)};
+$("browseHome").onclick=()=>{switchTab(true);$("browseQuery").value="";$("browseKind").value="";loadBrowse()};
+$("browseGo").onclick=()=>loadBrowse(browseParent,$("browseQuery").value.trim(),$("browseKind").value,true,0);
+$("loadMorePages").onclick=async()=>{try{await api("/api/browse/load-next",{method:"POST"});loadBrowse(browseParent,$("browseQuery").value.trim(),$("browseKind").value,false,browseOffset)}catch(e){$("browseNotice").textContent=e.message}};
+$("pagePrev").onclick=()=>browseParent&&$("browseQuery").value===""?openBrowseNode(browseParent,false,Math.max(0,browseOffset-50)):loadBrowse(browseParent,$("browseQuery").value.trim(),$("browseKind").value,false,Math.max(0,browseOffset-50));
+$("pageNext").onclick=()=>browseParent&&$("browseQuery").value===""?openBrowseNode(browseParent,false,browseOffset+50):loadBrowse(browseParent,$("browseQuery").value.trim(),$("browseKind").value,false,browseOffset+50);
+$("browseQuery").addEventListener("keydown",e=>{if(e.key==="Enter")$("browseGo").click()});
+$("browseMetaField").onchange=()=>{updateBrowseMetadataValues();loadBrowse(browseParent,$("browseQuery").value.trim(),$("browseKind").value)};
+$("browseMetaValue").onchange=()=>loadBrowse(browseParent,$("browseQuery").value.trim(),$("browseKind").value);
+$("browseKind").onchange=()=>loadBrowse(browseParent,$("browseQuery").value.trim(),$("browseKind").value);
+$("browseBack").onclick=()=>{if(browseHistoryIndex<=0)return;browseHistoryIndex--;restoreHistory(browseHistory[browseHistoryIndex])};
+$("browseForward").onclick=()=>{if(browseHistoryIndex>=browseHistory.length-1)return;browseHistoryIndex++;restoreHistory(browseHistory[browseHistoryIndex])};
+async function restoreHistory(id){
+  restoringBrowse=true;
+  if(id==="home")await loadBrowse(null,"","",false);
+  else if(id.startsWith("search:")){const q=id.slice(7);$("browseQuery").value=q;await loadBrowse(null,q,"",false)}
+  else await openBrowseNode(id,false);
+  restoringBrowse=false;$("browseBack").disabled=browseHistoryIndex<=0;$("browseForward").disabled=browseHistoryIndex>=browseHistory.length-1;
+}
+$("tabBrowse").onclick=()=>switchView("browse");
+$("tabSearch").onclick=()=>switchView("search");
+$("tabEvaluate").onclick=()=>{switchView("evaluate");evaluateModels()};
+$("tabSources").onclick=()=>switchView("sources");
+renderRecent();loadBrowse();
+</script>
+</body>
+</html>
